@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useId, useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutGrid, 
   BarChart2, 
@@ -13,10 +13,51 @@ import {
   Network 
 } from 'lucide-react';
 
+interface MetricState {
+  resolutionMultiplier: string;
+  uptimeIncrease: string;
+  modelDrift: string;
+  optimizationScore: string;
+}
+
 export default function TelcoAITile() {
+  const id = useId();
+  const purpleFlowId = `purpleFlow-${id}`;
+  const fadeLineId = `fadeLine-${id}`;
+  const fadeGradId = `fadeGrad-${id}`;
+
+  const [metrics, setMetrics] = useState<MetricState>({
+    resolutionMultiplier: "2.7x",
+    uptimeIncrease: "+30%",
+    modelDrift: "0.02%",
+    optimizationScore: "98.4"
+  });
+
+  // Use setTimeout for organic updates (jittery timing)
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const updateMetrics = () => {
+      setMetrics(prev => ({
+        ...prev,
+        resolutionMultiplier: (2.5 + Math.random() * 0.4).toFixed(1) + "x",
+        modelDrift: (Math.random() * 0.05).toFixed(3) + "%",
+        optimizationScore: (98 + Math.random() * 1.5).toFixed(1)
+      }));
+
+      // Random delay between 2s and 4s
+      const nextDelay = 2000 + Math.random() * 2000;
+      timeoutId = setTimeout(updateMetrics, nextDelay);
+    };
+
+    timeoutId = setTimeout(updateMetrics, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
   return (
     <div className="relative w-[600px] h-[600px] bg-[#0f172a] overflow-hidden border border-purple-500/20 flex flex-col shadow-2xl font-display select-none">
-      {/* Background Grid Pattern - Matches .grid-bg opacity 0.1 */}
+      {/* Background Grid Pattern */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -39,8 +80,15 @@ export default function TelcoAITile() {
           </div>
         </div>
         <div className="text-right">
-          <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-black text-white">+30%</span>
+          <div className="flex items-baseline gap-1 justify-end">
+            <motion.span 
+              key={metrics.uptimeIncrease}
+              initial={{ opacity: 0.5, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl font-black text-white"
+            >
+              {metrics.uptimeIncrease}
+            </motion.span>
             <span className="text-[8px] font-bold uppercase text-[#1973f0] tracking-tighter">Uptime</span>
           </div>
         </div>
@@ -52,19 +100,19 @@ export default function TelcoAITile() {
         {/* Animated Connecting Lines (SVG) */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 600 420">
           <defs>
-            <linearGradient id="purpleFlow" x1="0%" x2="0%" y1="0%" y2="100%">
+            <linearGradient id={purpleFlowId} x1="0%" x2="0%" y1="0%" y2="100%">
               <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
               <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
               <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
             </linearGradient>
-            <mask id="fadeLine">
-               <linearGradient id="fadeGrad" x1="0" y1="0" x2="0" y2="1">
+            <mask id={fadeLineId}>
+               <linearGradient id={fadeGradId} x1="0" y1="0" x2="0" y2="1">
                  <stop offset="0" stopColor="white" stopOpacity="0"/>
                  <stop offset="0.2" stopColor="white" stopOpacity="1"/>
                  <stop offset="0.8" stopColor="white" stopOpacity="1"/>
                  <stop offset="1" stopColor="white" stopOpacity="0"/>
                </linearGradient>
-               <rect x="0" y="0" width="600" height="420" fill="url(#fadeGrad)"/>
+               <rect x="0" y="0" width="600" height="420" fill={`url(#${fadeGradId})`}/>
             </mask>
           </defs>
           
@@ -72,7 +120,7 @@ export default function TelcoAITile() {
           <motion.path 
             d="M 300,50 L 300,160" 
             fill="none" 
-            stroke="url(#purpleFlow)" 
+            stroke={`url(#${purpleFlowId})`}
             strokeWidth="1.5"
             strokeDasharray="4 4"
             animate={{ strokeDashoffset: [0, -8] }}
@@ -83,7 +131,7 @@ export default function TelcoAITile() {
           <motion.path 
             d="M 300,260 L 300,370" 
             fill="none" 
-            stroke="url(#purpleFlow)" 
+            stroke={`url(#${purpleFlowId})`}
             strokeWidth="1.5"
             strokeDasharray="4 4"
             animate={{ strokeDashoffset: [0, -8] }}
@@ -119,7 +167,7 @@ export default function TelcoAITile() {
           {/* Pulse Ring 1 (Standard Tailwind) */}
           <div className="absolute w-44 h-44 rounded-full border border-purple-500/10 animate-pulse" />
           
-          {/* Pulse Ring 2 (Custom Framer Motion - Matches pulse-node keyframes) */}
+          {/* Pulse Ring 2 (Custom Framer Motion) */}
           <motion.div 
             className="absolute w-36 h-36 rounded-full border border-purple-500/30"
             animate={{ 
@@ -197,9 +245,14 @@ export default function TelcoAITile() {
         
         {/* Metric Header */}
         <div className="flex items-center gap-2">
-          <span className="text-3xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">
-            2.7x
-          </span>
+          <motion.span 
+            key={metrics.resolutionMultiplier}
+            initial={{ opacity: 0.8 }}
+            animate={{ opacity: 1 }}
+            className="text-3xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+          >
+            {metrics.resolutionMultiplier}
+          </motion.span>
           <span className="text-[10px] font-bold uppercase text-cyan-400/80 tracking-widest">
             Faster Resolution
           </span>
@@ -230,13 +283,13 @@ export default function TelcoAITile() {
                >
                  <span>Predictive Engine: Active</span>
                  <span className="opacity-30">•</span>
-                 <span>Model Drift: 0.02%</span>
+                 <span>Model Drift: {metrics.modelDrift}</span>
                  <span className="opacity-30">•</span>
                  <span>Auto-Remediation: Standby</span>
                  <span className="opacity-30">•</span>
                  <span>Anomaly Detected: Fixed (Node-4)</span>
                  <span className="opacity-30">•</span>
-                 <span>Optimization Score: 98.4</span>
+                 <span>Optimization Score: {metrics.optimizationScore}</span>
                </motion.div>
             </div>
           </div>

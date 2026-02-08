@@ -3,8 +3,24 @@
 import React from 'react';
 import TelcoAITile from './components/TelcoAITile';
 import { ArrowRight, ChevronRight, Activity, Globe, ShieldCheck } from 'lucide-react';
+// Note: In a real Next.js app, uncomment the following line
+// import { useRouter } from 'next/navigation';
 
 export default function App() {
+  // const router = useRouter();
+
+  const handleStartDeployment = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("Deployment flow started");
+    // router.push('/deploy');
+  };
+
+  const handleViewDemo = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("Demo view requested");
+    // router.push('/demo');
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-white font-display overflow-x-hidden selection:bg-purple-500/30">
       
@@ -18,10 +34,10 @@ export default function App() {
             <span className="font-bold tracking-tight text-lg">Nexus<span className="text-purple-500">AI</span></span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
-            <a href="#" className="hover:text-white transition-colors">Platform</a>
-            <a href="#" className="hover:text-white transition-colors">Solutions</a>
-            <a href="#" className="hover:text-white transition-colors">Docs</a>
-            <a href="#" className="hover:text-white transition-colors">Enterprise</a>
+            <button className="hover:text-white transition-colors bg-transparent border-none cursor-pointer">Platform</button>
+            <button className="hover:text-white transition-colors bg-transparent border-none cursor-pointer">Solutions</button>
+            <button className="hover:text-white transition-colors bg-transparent border-none cursor-pointer">Docs</button>
+            <button className="hover:text-white transition-colors bg-transparent border-none cursor-pointer">Enterprise</button>
           </div>
           <button className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full transition-all">
             Get Access
@@ -58,11 +74,17 @@ export default function App() {
               </p>
               
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                <button className="h-12 px-8 rounded-full bg-white text-black font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors">
+                <button 
+                  onClick={handleStartDeployment}
+                  className="h-12 px-8 rounded-full bg-white text-black font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors"
+                >
                   Start Deployment
                   <ArrowRight className="w-4 h-4" />
                 </button>
-                <button className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
+                <button 
+                  onClick={handleViewDemo}
+                  className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors flex items-center gap-2"
+                >
                   View Demo
                   <ChevronRight className="w-4 h-4 text-white/40" />
                 </button>
