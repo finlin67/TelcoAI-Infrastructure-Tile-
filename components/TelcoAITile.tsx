@@ -1,23 +1,35 @@
 'use client';
 
-import React, { useId, useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useId, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   LayoutGrid, 
   BarChart2, 
   Activity, 
   Brain, 
   Cpu, 
-  Zap, 
-  UserRoundSearch, 
-  Network 
+  Zap,
 } from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from 'recharts';
 
 interface MetricState {
   resolutionMultiplier: string;
   uptimeIncrease: string;
   modelDrift: string;
   optimizationScore: string;
+}
+
+interface DriftPoint {
+  time: string;
+  value: number;
 }
 
 export default function TelcoAITile() {
@@ -29,24 +41,53 @@ export default function TelcoAITile() {
   const [metrics, setMetrics] = useState<MetricState>({
     resolutionMultiplier: "2.7x",
     uptimeIncrease: "+30%",
-    modelDrift: "0.02%",
+    modelDrift: "0.020%",
     optimizationScore: "98.4"
   });
+
+  const [driftHistory, setDriftHistory] = useState<DriftPoint[]>([]);
+
+  // Initialize history with some dummy data to prevent empty chart at start
+  useEffect(() => {
+    const initialData: DriftPoint[] = [];
+    const now = new Date();
+    for (let i = 20; i > 0; i--) {
+      const t = new Date(now.getTime() - i * 2000);
+      initialData.push({
+        time: t.toLocaleTimeString('en-US', { minute: '2-digit', second: '2-digit' }),
+        value: 0.01 + Math.random() * 0.04
+      });
+    }
+    setDriftHistory(initialData);
+  }, []);
 
   // Use setTimeout for organic updates (jittery timing)
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const updateMetrics = () => {
+      const newDriftValue = Math.random() * 0.06;
+      
       setMetrics(prev => ({
         ...prev,
         resolutionMultiplier: (2.5 + Math.random() * 0.4).toFixed(1) + "x",
-        modelDrift: (Math.random() * 0.05).toFixed(3) + "%",
+        modelDrift: newDriftValue.toFixed(3) + "%",
         optimizationScore: (98 + Math.random() * 1.5).toFixed(1)
       }));
 
-      // Random delay between 2s and 4s
-      const nextDelay = 2000 + Math.random() * 2000;
+      setDriftHistory(prev => {
+        const now = new Date();
+        const newPoint = {
+          time: now.toLocaleTimeString('en-US', { minute: '2-digit', second: '2-digit' }),
+          value: newDriftValue
+        };
+        const newHistory = [...prev, newPoint];
+        if (newHistory.length > 20) newHistory.shift();
+        return newHistory;
+      });
+
+      // Random delay between 1.5s and 3s for faster graph updates
+      const nextDelay = 1500 + Math.random() * 1500;
       timeoutId = setTimeout(updateMetrics, nextDelay);
     };
 
@@ -210,34 +251,69 @@ export default function TelcoAITile() {
           </motion.div>
         </section>
 
-        {/* Bottom Cards */}
-        <section className="flex flex-col gap-3 z-10 w-full max-w-[320px]">
-          {/* Card 1 */}
-          <div className="flex items-center gap-4 p-3 bg-slate-950/60 backdrop-blur-md border border-purple-500/20 rounded-xl hover:border-purple-500/50 transition-all cursor-default group">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0 group-hover:bg-purple-500/20 transition-colors">
-              <UserRoundSearch className="text-purple-400 w-5 h-5" />
+        {/* Interactive Graph Section (Replaces Bottom Cards) */}
+        <section className="flex flex-col gap-2 z-10 w-full max-w-[340px] h-[140px] bg-slate-950/80 backdrop-blur-md border border-purple-500/20 rounded-xl p-3 shadow-lg relative overflow-hidden group">
+          {/* Header */}
+          <div className="flex justify-between items-center z-10 relative">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              <span className="text-[10px] uppercase font-bold text-purple-400 tracking-wider">Model Drift Trend</span>
             </div>
-            <div>
-              <div className="text-[9px] uppercase font-bold text-purple-400 mb-0.5">Strategy</div>
-              <p className="text-[11px] font-medium leading-tight text-white/90">
-                Proactive Retention Modeling & Churn Forecasting
-              </p>
-            </div>
+            <span className="text-[9px] font-mono text-white/40">Real-time (1m)</span>
           </div>
 
-          {/* Card 2 */}
-          <div className="flex items-center gap-4 p-3 bg-slate-950/60 backdrop-blur-md border border-purple-500/20 rounded-xl hover:border-purple-500/50 transition-all cursor-default group">
-            <div className="w-10 h-10 rounded-lg bg-[#1973f0]/10 flex items-center justify-center shrink-0 group-hover:bg-[#1973f0]/20 transition-colors">
-              <Network className="text-[#1973f0] w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-[9px] uppercase font-bold text-[#1973f0] mb-0.5">Ops</div>
-              <p className="text-[11px] font-medium leading-tight text-white/90">
-                Autonomous Load Balancing & Predictive Scaling
-              </p>
-            </div>
+          {/* Chart Container */}
+          <div className="flex-1 w-full min-h-0 -ml-2 z-10 relative">
+             <ResponsiveContainer width="100%" height="100%">
+               <AreaChart data={driftHistory}>
+                  <defs>
+                    <linearGradient id="colorDrift" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                  <XAxis 
+                    dataKey="time" 
+                    tick={{fontSize: 8, fill: '#ffffff40'}} 
+                    tickLine={false}
+                    axisLine={false}
+                    interval={4}
+                  />
+                  <YAxis 
+                    hide 
+                    domain={[0, 0.1]} 
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0f172a', 
+                      borderColor: '#a855f740', 
+                      fontSize: '10px',
+                      color: 'white',
+                      borderRadius: '4px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    itemStyle={{ color: '#a855f7' }}
+                    formatter={(value: number) => [`${value.toFixed(3)}%`, 'Drift']}
+                    labelStyle={{ color: '#ffffff80', marginBottom: '2px' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#a855f7" 
+                    fillOpacity={1} 
+                    fill="url(#colorDrift)" 
+                    strokeWidth={2}
+                    isAnimationActive={false} 
+                  />
+               </AreaChart>
+             </ResponsiveContainer>
           </div>
+
+          {/* Subtle Grid overlay for aesthetic */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.03)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none z-0" />
         </section>
+
       </main>
 
       {/* Footer */}
